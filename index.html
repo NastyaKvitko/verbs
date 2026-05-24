@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Verbs" />
+  <meta name="theme-color" content="#0A0A0A" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <title>Verbs</title>
+  <style>
+    :root {
+      --bg: #0A0A0A;
+      --bg-2: #141414;
+      --fg: #F4F4F1;
+      --muted: #6B6B66;
+      --line: #1F1F1D;
+      --accent: #C8FF00;
+      --accent-dim: rgba(200, 255, 0, 0.12);
+      --danger: #FF6F5C;
+      --safe-t: env(safe-area-inset-top);
+      --safe-b: env(safe-area-inset-bottom);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex; flex-direction: column;
+      padding-top: var(--safe-t);
+      padding-bottom: var(--safe-b);
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(200, 255, 0, 0.06), transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(200, 255, 0, 0.04), transparent 50%),
+        var(--bg);
+    }
+
+    /* HEADER */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px 10px;
+      position: relative;
+      z-index: 5;
+    }
+    .brand {
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--fg);
+    }
+    .brand .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 8px;
+      vertical-align: middle;
+      box-shadow: 0 0 12px var(--accent);
+    }
+    .counter {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+    .counter b { color: var(--fg); font-weight: 600; }
+
+    /* PROGRESS */
+    .progress {
+      height: 2px;
+      margin: 0 22px 18px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 10px rgba(200, 255, 0, 0.5);
+    }
+
+    /* DECK */
+    .deck {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 22px;
+      perspective: 1400px;
+    }
+    .card {
+      position: absolute;
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 3 / 4;
+      max-height: 70vh;
+      border-radius: 28px;
+      background: linear-gradient(180deg, #1A1A18 0%, #0F0F0E 100%);
+      border: 1px solid var(--line);
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+      will-change: transform;
+      cursor: grab;
+      box-shadow:
+        0 30px 60px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card.dragging { transition: none; cursor: grabbing; }
+    .card.behind {
+      transform: translateY(14px) scale(0.94);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex; flex-direction: column;
+      padding: 28px;
+      border-radius: 28px;
+    }
+    .face.back { transform: rotateY(180deg); }
+
+    .face-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .face-label .lvl {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      margin-left: 8px;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+    }
+    .word {
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .word .v1 {
+      font-size: clamp(48px, 13vw, 76px);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      color: var(--fg);
+    }
+    .word .translation {
+      font-size: 17px;
+      color: var(--muted);
+      margin-top: 14px;
+      letter-spacing: -0.01em;
+    }
+    .tap-hint {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: auto;
+      opacity: 0.6;
+    }
+
+    /* BACK face — answer */
+    .forms {
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .form {
+      display: flex; align-items: baseline; gap: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .form:last-child { border-bottom: none; }
+    .form .tag {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      min-width: 36px;
+      font-weight: 500;
+    }
+    .form .val {
+      font-size: clamp(28px, 7vw, 38px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      line-height: 1.05;
+    }
+    .form.v1 .val { color: var(--muted); font-weight: 500; }
+    .form .val .accent { color: var(--accent); }
+
+    /* SWIPE OVERLAYS */
+    .stamp {
+      position: absolute;
+      top: 28px;
+      padding: 8px 14px;
+      border: 2px solid currentColor;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+    }
+    .stamp.know { right: 28px; color: var(--accent); transform: rotate(8deg); }
+    .stamp.again { left: 28px; color: var(--danger); transform: rotate(-8deg); }
+
+    /* ACTION ROW */
+    .actions {
+      display: flex; gap: 12px;
+      padding: 16px 22px 18px;
+      justify-content: space-between;
+      position: relative;
+      z-index: 5;
+    }
+    button {
+      font: inherit;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--fg);
+      border-radius: 999px;
+      padding: 14px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      flex: 1;
+      transition: transform 0.1s, background 0.2s, border-color 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    button:active { transform: scale(0.96); }
+    button.again { color: var(--danger); border-color: rgba(255, 111, 92, 0.3); }
+    button.again:hover { background: rgba(255, 111, 92, 0.08); }
+    button.flip {
+      flex: 1.2;
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+    }
+    button.know { color: var(--accent); border-color: rgba(200, 255, 0, 0.3); }
+    button.know:hover { background: var(--accent-dim); }
+
+    /* FILTERS / FOOTER */
+    .filters {
+      display: flex; gap: 6px;
+      padding: 0 22px 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .chip {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+    .chip.active {
+      color: var(--bg);
+      background: var(--fg);
+      border-color: var(--fg);
+    }
+    .chip .badge {
+      margin-left: 6px;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.6;
+    }
+
+    /* BOOKMARK BUTTON ON CARD */
+    .bookmark {
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      z-index: 2;
+      transition: transform 0.15s;
+    }
+    .bookmark:active { transform: scale(0.9); }
+    .bookmark svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; }
+    .bookmark.active svg { stroke: var(--accent); fill: var(--accent); }
+
+    /* COMPLETE STATE */
+    .complete {
+      position: absolute; inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 22px;
+      animation: fadeIn 0.4s;
+    }
+    .complete.show { display: flex; }
+    .complete h2 {
+      font-size: 36px; font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0 0 8px;
+    }
+    .complete p {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+    .complete .stat {
+      display: flex; gap: 24px;
+      margin: 28px 0;
+    }
+    .complete .stat div {
+      text-align: center;
+    }
+    .complete .stat .num {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .complete .stat .label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 380px) {
+      .word .v1 { font-size: 56px; }
+      .form .val { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="dot"></span>Verbs</div>
+    <div class="counter"><b id="cur">0</b> / <span id="total">0</span></div>
+  </header>
+
+  <div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="deck" id="deck">
+    <!-- cards injected -->
+    <div class="complete" id="complete">
+      <h2>Готово ✦</h2>
+      <p>Пройдено всю колоду. Можна повторити складні або переключитись на інший рівень.</p>
+      <div class="stat">
+        <div><div class="num" id="statKnow">0</div><div class="label">Знаю</div></div>
+        <div><div class="num" id="statAgain">0</div><div class="label">Повторити</div></div>
+      </div>
+      <button class="flip" style="max-width: 220px; flex: none;" onclick="restart()">Почати знову</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="again" onclick="markAgain()">↺ Повторити</button>
+    <button class="flip" onclick="flipCard()">Показати</button>
+    <button class="know" onclick="markKnow()">Знаю ✓</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="chip active" data-mode="all">Усі <span class="badge" id="b-all">0</span></div>
+    <div class="chip" data-mode="easy">Easy <span class="badge" id="b-easy">0</span></div>
+    <div class="chip" data-mode="medium">Medium <span class="badge" id="b-medium">0</span></div>
+    <div class="chip" data-mode="hard">Hard <span class="badge" id="b-hard">0</span></div>
+    <div class="chip" data-mode="bookmarks">★ <span class="badge" id="b-bm">0</span></div>
+  </div>
+
+  <script src="./verbs.js"></script>
+  <script src="./app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
