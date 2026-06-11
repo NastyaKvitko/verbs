@@ -202,8 +202,8 @@
       state.deckOrder.push(v1);
       advance();
     } else {
-      // snap back
-      card.style.transform = isFlipped ? "rotateY(180deg)" : "";
+      // snap back — clear inline transform so .flipped class controls rotation
+      card.style.transform = "";
       const knowStamp = card.querySelector(".stamp.know");
       const againStamp = card.querySelector(".stamp.again");
       if (knowStamp) knowStamp.style.opacity = 0;
