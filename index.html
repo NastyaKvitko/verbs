@@ -227,6 +227,8 @@
       opacity: 0;
       transition: opacity 0.15s;
       pointer-events: none;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     .stamp.know { right: 28px; color: var(--accent); transform: rotate(8deg); }
     .stamp.again { left: 28px; color: var(--danger); transform: rotate(-8deg); }
@@ -324,6 +326,8 @@
       cursor: pointer;
       z-index: 2;
       transition: transform 0.15s;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     .bookmark:active { transform: scale(0.9); }
     .bookmark svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; }
